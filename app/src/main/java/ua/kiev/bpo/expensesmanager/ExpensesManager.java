@@ -7,6 +7,8 @@ import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.Activity;
+import android.app.LoaderManager;
+import android.content.Loader;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
@@ -22,7 +24,10 @@ import android.view.View.OnLongClickListener;
 import android.view.ViewAnimationUtils;
 import android.view.ViewGroupOverlay;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import ua.kiev.bpo.expensesmanager.ExpensesManagerEditText.OnTextSizeChangeListener;
@@ -39,6 +44,8 @@ public class ExpensesManager extends Activity implements EvaluateCallback,
     // instance state keys
     private static final String KEY_CURRENT_STATE = NAME + "_currentState";
     private static final String KEY_CURRENT_EXPRESSION = NAME + "_currentExpression";
+
+    private static final String KEY_DAY_RECORD_ID = NAME + "dayRecordId";
 
     private View mDisplayView;
     private ExpensesManagerEditText mFormulaEditText;
@@ -95,6 +102,11 @@ public class ExpensesManager extends Activity implements EvaluateCallback,
 
     private DrawerLayout mDrawerLayout;
     private ActionBarDrawerToggle mDrawerToggle;
+    private String[] mTitles;
+    private ListView mDrawerList;
+
+    private DayRecordManager mDayRecordManager;
+    private DayRecord mDayRecord;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -106,6 +118,14 @@ public class ExpensesManager extends Activity implements EvaluateCallback,
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calculator_port);
+
+        mDayRecordManager = DayRecordManager.get(this);
+
+        long dayRecordId = savedInstanceState.getLong(KEY_DAY_RECORD_ID);
+        if (dayRecordId != -1){
+            LoaderManager lm = getLoaderManager();
+
+        }
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, R
@@ -123,9 +143,14 @@ public class ExpensesManager extends Activity implements EvaluateCallback,
             }
         };
 
-        //getActionBar().setDisplayHomeAsUpEnabled(true);
-        //getActionBar().setHomeButtonEnabled(true);
-
+        mTitles = getResources().getStringArray(R.array.titles);
+        mDrawerLayout.setDrawerListener(mDrawerToggle);
+        mDrawerList = (ListView) findViewById(R.id.drawer);
+        ArrayAdapter<String> adapter =
+                new ArrayAdapter<String>(this, android.R.layout.simple_list_item_activated_1,
+                        mTitles);
+        mDrawerList.setAdapter(adapter);
+        mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
 
 
         mDisplayView = (View) findViewById(R.id.display);
@@ -408,6 +433,8 @@ public class ExpensesManager extends Activity implements EvaluateCallback,
         outState.putInt(KEY_CURRENT_STATE, mCurrentState.ordinal());
         outState.putString(KEY_CURRENT_EXPRESSION,
                 mTokenizer.getNormalizedExpression(mFormulaEditText.getText().toString()));
+
+        outState.putLong(KEY_DAY_RECORD_ID, mDayRecord.getId());
     }
 
     @Override
@@ -421,4 +448,29 @@ public class ExpensesManager extends Activity implements EvaluateCallback,
     }
 
     private enum ExpensesManagerState {INPUT, EVALUATE, RESULT, ERROR}
+
+    private class DrawerItemClickListener implements ListView.OnItemClickListener {
+
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+        }
+    }
+
+    private class DayRecordLoaderCallback implements LoaderManager.LoaderCallbacks<DayRecord>{
+        @Override
+        public Loader<DayRecord> onCreateLoader(int id, Bundle args) {
+            return null;
+        }
+
+        @Override
+        public void onLoadFinished(Loader<DayRecord> loader, DayRecord data) {
+            mDayRecord = data;
+        }
+
+        @Override
+        public void onLoaderReset(Loader<DayRecord> loader) {
+
+        }
+    }
 }
