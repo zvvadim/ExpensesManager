@@ -36,12 +36,7 @@ public class ExpensesManagerDatabaseHelper extends SQLiteOpenHelper {
     }
 
     public DayRecordCursor queryCreateDayRecord(Long id){
-        Cursor wraped =
-        if (id == -1){
-
-        } else {
-
-        }
+        return null;
     }
 
     public class DayRecordCursor extends CursorWrapper {

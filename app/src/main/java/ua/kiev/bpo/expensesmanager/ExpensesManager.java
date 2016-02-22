@@ -47,6 +47,8 @@ public class ExpensesManager extends Activity implements EvaluateCallback,
 
     private static final String KEY_DAY_RECORD_ID = NAME + "dayRecordId";
 
+    private static final int LOAD_DAYRECORD = 0;
+
     private View mDisplayView;
     private ExpensesManagerEditText mFormulaEditText;
     private ExpensesManagerEditText mResultEditText;
@@ -124,7 +126,7 @@ public class ExpensesManager extends Activity implements EvaluateCallback,
         long dayRecordId = savedInstanceState.getLong(KEY_DAY_RECORD_ID);
         if (dayRecordId != -1){
             LoaderManager lm = getLoaderManager();
-
+            lm.initLoader(LOAD_DAYRECORD,savedInstanceState,new DayRecordLoaderCallback());
         }
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -460,7 +462,7 @@ public class ExpensesManager extends Activity implements EvaluateCallback,
     private class DayRecordLoaderCallback implements LoaderManager.LoaderCallbacks<DayRecord>{
         @Override
         public Loader<DayRecord> onCreateLoader(int id, Bundle args) {
-            return null;
+            return new DayRecordLoader(getApplicationContext(), args.getLong(KEY_DAY_RECORD_ID));
         }
 
         @Override
