@@ -8,6 +8,7 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.app.LoaderManager;
+import android.content.Intent;
 import android.content.Loader;
 import android.graphics.Rect;
 import android.os.Bundle;
@@ -32,6 +33,7 @@ import android.widget.TextView;
 
 import ua.kiev.bpo.expensesmanager.ExpensesManagerEditText.OnTextSizeChangeListener;
 import ua.kiev.bpo.expensesmanager.ExpensesManagerExpressionEvaluator.EvaluateCallback;
+import ua.kiev.bpo.expensesmanager.calendar.AllInOneActivity;
 
 public class ExpensesManager extends Activity implements EvaluateCallback,
         OnTextSizeChangeListener, OnLongClickListener {
@@ -123,11 +125,15 @@ public class ExpensesManager extends Activity implements EvaluateCallback,
 
         mDayRecordManager = DayRecordManager.get(this);
 
-        long dayRecordId = savedInstanceState.getLong(KEY_DAY_RECORD_ID);
-        if (dayRecordId != -1){
-            LoaderManager lm = getLoaderManager();
-            lm.initLoader(LOAD_DAYRECORD,savedInstanceState,new DayRecordLoaderCallback());
+        long dayRecordId = -1;
+        Bundle args = new Bundle();
+        if (savedInstanceState != null){
+            dayRecordId = savedInstanceState.getLong(KEY_DAY_RECORD_ID, -1);
         }
+        args.putLong(KEY_DAY_RECORD_ID, dayRecordId);
+
+        LoaderManager lm = getLoaderManager();
+        lm.initLoader(LOAD_DAYRECORD, args, new DayRecordLoaderCallback());
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, R
@@ -449,17 +455,32 @@ public class ExpensesManager extends Activity implements EvaluateCallback,
         }
     }
 
+    private void selectItem(int position){
+        switch (position){
+            case 1:
+                Intent intent = new Intent(this, AllInOneActivity.class);
+                startActivity(intent);
+                break;
+            case 2:
+                break;
+            default:
+                break;
+        }
+        mDrawerLayout.closeDrawer(mDrawerList);
+
+    }
+
     private enum ExpensesManagerState {INPUT, EVALUATE, RESULT, ERROR}
 
     private class DrawerItemClickListener implements ListView.OnItemClickListener {
 
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
+            selectItem(position);
         }
     }
 
-    private class DayRecordLoaderCallback implements LoaderManager.LoaderCallbacks<DayRecord>{
+    private class DayRecordLoaderCallback implements LoaderManager.LoaderCallbacks<DayRecord> {
         @Override
         public Loader<DayRecord> onCreateLoader(int id, Bundle args) {
             return new DayRecordLoader(getApplicationContext(), args.getLong(KEY_DAY_RECORD_ID));

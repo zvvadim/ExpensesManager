@@ -49,6 +49,7 @@
 
     <string-array name="titles">
         <item>HOME</item>
+        <item>Calendar</item>
     </string-array>
 
 </resources>

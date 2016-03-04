@@ -40,4 +40,34 @@
     <!-- Ripple color when a button is pressed in a pad. -->
     <color name="pad_button_advanced_ripple_color">#1A000000</color>
 
+    <color name="transparent" type="color">#00FFFFFF</color>
+    <color name="grey" type="color">#555555</color>
+    <color name="green" type="color">#4499CC00</color>
+    <color name="darkgreen" type="color">#FF669900</color>
+
+    <color name="month_mini_day_number">#FF000000</color>
+    <color name="month_grid_lines">#ffCCCCCC</color>
+    <color name="mini_month_bg_color">#FFFFFFFF</color>
+    <color name="mini_month_today_outline_color">#FF000000</color>
+    <color name="month_day_number">#FF333333</color>
+    <color name="month_day_number_other">#FF999999</color>
+    <color name="month_week_num_color">#FF999999</color>
+    <color name="month_day_names_color">#FF999999</color>
+    <color name="month_today_number">#FF333333</color>
+    <color name="month_event_color">#FF333333</color>
+    <color name="month_event_extra_color">#FF666666</color>
+    <color name="month_event_other_color">#FF666666</color>
+    <color name="month_event_extra_other_color">#4C999999</color>
+    <color name="month_saturday">#80333333</color>
+    <color name="month_sunday">#80333333</color>
+    <color name="month_other_month_day_number">#ff939497</color>
+    <color name="month_other_bgcolor">#FFEEEEEE</color>
+    <color name="month_selected_week_bgcolor">#FFDDDDDD</color>
+    <color name="month_today_bgcolor">#FFFFFFFF</color>
+    <color name="month_bgcolor">#FFE5E5E5</color>
+
+    <color name="month_dna_conflict_time_color">#FF333333</color>
+    <color name="calendar_date_banner_background">#FFEEEEEE</color>
+
+
 </resources>

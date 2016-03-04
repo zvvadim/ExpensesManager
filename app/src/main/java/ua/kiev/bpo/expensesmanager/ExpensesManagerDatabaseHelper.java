@@ -1,5 +1,6 @@
 package ua.kiev.bpo.expensesmanager;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.CursorWrapper;
@@ -37,6 +38,30 @@ public class ExpensesManagerDatabaseHelper extends SQLiteOpenHelper {
 
     public DayRecordCursor queryCreateDayRecord(Long id){
         return null;
+    }
+
+    public long insertDayRecord(DayRecord dayRecord){
+        ContentValues cv = new ContentValues();
+        cv.put(COLUMN_EXPENSES_DATE, dayRecord.getDateOfRecord().getTime());
+        cv.put(COLUMN_EXPENSES_AMOUNT, dayRecord.getAmount());
+
+        return getWritableDatabase().insert(TABLE_EXPENSES,null,cv);
+    }
+
+    public DayRecordCursor queryDayRecordByDay(long date){
+        Cursor wraped = getReadableDatabase().query(TABLE_EXPENSES,
+                null, COLUMN_EXPENSES_DATE + " = ?", new String[]{String.valueOf(date)}, null,
+                null,null,"1");
+
+        return  new DayRecordCursor(wraped);
+    }
+
+    public DayRecordCursor queryDayRecord(long id){
+        Cursor wraped = getReadableDatabase().query(TABLE_EXPENSES,
+                null, COLUMN_EXPENSES_ID + " = ?", new String[]{String.valueOf(id)}, null,
+                null,null,"1");
+
+        return  new DayRecordCursor(wraped);
     }
 
     public class DayRecordCursor extends CursorWrapper {

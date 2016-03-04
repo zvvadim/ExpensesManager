@@ -10,6 +10,7 @@ public class DayRecord {
     public DayRecord() {
         mId = -1;
         mDateOfRecord = new Date();
+        mAmount = 0;
     }
 
     public long getId() {
