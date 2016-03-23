@@ -25,6 +25,7 @@ import android.graphics.drawable.StateListDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.CalendarContract;
+import android.text.format.DateUtils;
 import android.text.format.Time;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -34,8 +35,14 @@ import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 
+import ua.kiev.bpo.expensesmanager.DayRecord;
+import ua.kiev.bpo.expensesmanager.DayRecordManager;
+import ua.kiev.bpo.expensesmanager.DayRecordsProvider;
 import ua.kiev.bpo.expensesmanager.R;
 
 public class MonthByWeekFragment extends SimpleDayPickerFragment implements LoaderManager
@@ -50,6 +57,8 @@ public class MonthByWeekFragment extends SimpleDayPickerFragment implements Load
     protected int mFirstLoadedJulianDay;
     protected int mLastLoadedJulianDay;
 
+    protected boolean mIsMiniMonth;
+
     private static final int WEEKS_BUFFER = 1;
     // How long to wait after scroll stops before starting the loader
     // Using scroll duration because scroll state changes don't update
@@ -60,12 +69,14 @@ public class MonthByWeekFragment extends SimpleDayPickerFragment implements Load
     private static final int LOADER_THROTTLE_DELAY = 500;
 
     private final Time mDesiredDay = new Time();
-    private Uri mEventUri;
+    private Uri mDayRecordUri;
 
     private volatile boolean mShouldLoad = true;
     private boolean mIsDetached;
 
     private CursorLoader mLoader;
+
+    private DayRecordManager mDayRecordManager;
 
     private final Runnable mTZUpdater = new Runnable() {
         @Override
@@ -95,13 +106,13 @@ public class MonthByWeekFragment extends SimpleDayPickerFragment implements Load
                 stopLoader();
 
                 // Start the loader again
-                mEventUri = updateUri();
+                mDayRecordUri = updateUri();
 
-                mLoader.setUri(mEventUri);
+                mLoader.setUri(mDayRecordUri);
                 mLoader.startLoading();
                 mLoader.onContentChanged();
                 if (Log.isLoggable(TAG, Log.DEBUG)) {
-                    Log.d(TAG, "Started loader with uri: " + mEventUri);
+                    Log.d(TAG, "Started loader with uri: " + mDayRecordUri);
                 }
             }
         }
@@ -144,7 +155,7 @@ public class MonthByWeekFragment extends SimpleDayPickerFragment implements Load
 
         View v;
         v = inflater.inflate(R.layout.month_by_week, container, false);
-
+        //v = inflater.inflate(R.layout.full_month_by_week, container, false);
         mDayNamesHeader = (ViewGroup) v.findViewById(R.id.day_names);
 
         return v;
@@ -154,8 +165,12 @@ public class MonthByWeekFragment extends SimpleDayPickerFragment implements Load
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+        mIsMiniMonth = true;
+
         mListView.setSelector(new StateListDrawable());
         mListView.setOnTouchListener(this);
+
+        mDayRecordManager = DayRecordManager.get(getActivity().getApplicationContext());
 
         mLoader = (CursorLoader) getLoaderManager().initLoader(0, null, this);
 
@@ -169,18 +184,26 @@ public class MonthByWeekFragment extends SimpleDayPickerFragment implements Load
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            return null;
+        CursorLoader loader;
+        synchronized (mUpdateLoader){
 
+            mFirstLoadedJulianDay =
+                    Time.getJulianDay(mSelectedDay.toMillis(true), mSelectedDay.gmtoff)
+                            - (mNumWeeks * 7 / 2);
+            mDayRecordUri = updateUri();
+
+            return mDayRecordManager.queryDayRecors(mDayRecordUri);
+        }
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         synchronized (mUpdateLoader) {
             if (Log.isLoggable(TAG, Log.DEBUG)) {
-                Log.d(TAG, "Found " + data.getCount() + " cursor entries for uri " + mEventUri);
+                Log.d(TAG, "Found " + data.getCount() + " cursor entries for uri " + mDayRecordUri);
             }
             CursorLoader cLoader = (CursorLoader) loader;
-            if (mEventUri == null) {
+           /* if (mEventUri == null) {
                 mEventUri = cLoader.getUri();
                 updateLoadedDays();
             }
@@ -188,7 +211,16 @@ public class MonthByWeekFragment extends SimpleDayPickerFragment implements Load
                 // We've started a new query since this loader ran so ignore the
                 // result
                 return;
-            }
+            }*/
+
+            ArrayList<DayRecord> dayRecords = new ArrayList<DayRecord>();
+            DayRecord.buildDayRecordsFromCursor(
+                    dayRecords, data, mContext, mFirstLoadedJulianDay, mLastLoadedJulianDay);
+            ((MonthByWeekAdapter) mAdapter).setDayRecords(mFirstLoadedJulianDay,
+                    mLastLoadedJulianDay - mFirstLoadedJulianDay + 1, dayRecords);
+
+
+
         }
     }
 
@@ -206,7 +238,7 @@ public class MonthByWeekFragment extends SimpleDayPickerFragment implements Load
     }
 
     private void updateLoadedDays() {
-        List<String> pathSegments = mEventUri.getPathSegments();
+        List<String> pathSegments = mDayRecordUri.getPathSegments();
         int size = pathSegments.size();
         if (size <= 2) {
             return;
@@ -262,11 +294,46 @@ public class MonthByWeekFragment extends SimpleDayPickerFragment implements Load
         mTempTime.setJulianDay(mLastLoadedJulianDay + 1);
         long end = mTempTime.toMillis(true);
 
-        // Create a new uri with the updated times
-        Uri.Builder builder = CalendarContract.Instances.CONTENT_URI.buildUpon();
+        Uri.Builder builder = DayRecordsProvider.CONTENT_URI.buildUpon();
+        //Uri.Builder builder = CalendarContract.Instances.CONTENT_URI.buildUpon();
         ContentUris.appendId(builder, start);
         ContentUris.appendId(builder, end);
         return builder.build();
+    }
+
+    @Override
+    protected void setUpAdapter() {
+        mFirstDayOfWeek = Utils.getFirstDayOfWeek(mContext);
+        mShowWeekNumber = Utils.getShowWeekNumber(mContext);
+
+        HashMap<String, Integer> weekParams = new HashMap<String, Integer>();
+        weekParams.put(SimpleWeeksAdapter.WEEK_PARAMS_NUM_WEEKS, mNumWeeks);
+        weekParams.put(SimpleWeeksAdapter.WEEK_PARAMS_SHOW_WEEK, mShowWeekNumber ? 1 : 0);
+        weekParams.put(SimpleWeeksAdapter.WEEK_PARAMS_WEEK_START, mFirstDayOfWeek);
+        weekParams.put(MonthByWeekAdapter.WEEK_PARAMS_IS_MINI, mIsMiniMonth ? 1 : 0);
+        weekParams.put(SimpleWeeksAdapter.WEEK_PARAMS_JULIAN_DAY,
+                Time.getJulianDay(mSelectedDay.toMillis(true), mSelectedDay.gmtoff));
+        weekParams.put(SimpleWeeksAdapter.WEEK_PARAMS_DAYS_PER_WEEK, mDaysPerWeek);
+        if (mAdapter == null) {
+            mAdapter = new MonthByWeekAdapter(getActivity(), weekParams);
+        } else {
+            mAdapter.updateParams(weekParams);
+        }
+        mAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    protected void setUpHeader() {
+        if (mIsMiniMonth) {
+            super.setUpHeader();
+            return;
+        }
+
+        mDayLabels = new String[7];
+        for (int i = Calendar.SUNDAY; i <= Calendar.SATURDAY; i++) {
+            mDayLabels[i - Calendar.SUNDAY] = DateUtils.getDayOfWeekString(i,
+                    DateUtils.LENGTH_MEDIUM).toUpperCase();
+        }
     }
 
     @Override

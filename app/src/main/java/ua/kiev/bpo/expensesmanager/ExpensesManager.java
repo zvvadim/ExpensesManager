@@ -123,7 +123,7 @@ public class ExpensesManager extends Activity implements EvaluateCallback,
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calculator_port);
 
-        mDayRecordManager = DayRecordManager.get(this);
+        mDayRecordManager = DayRecordManager.get(this.getApplicationContext());
 
         long dayRecordId = -1;
         Bundle args = new Bundle();
@@ -215,6 +215,7 @@ public class ExpensesManager extends Activity implements EvaluateCallback,
             onError(errorResourceId);
         } else if (!TextUtils.isEmpty(result)) {
             onResult(result);
+            appendResult(result);
         } else if (mCurrentState == ExpensesManagerState.EVALUATE) {
             setState(ExpensesManagerState.INPUT);
         }
@@ -308,6 +309,15 @@ public class ExpensesManager extends Activity implements EvaluateCallback,
 
         mCurrentAnimator = animatorSet;
         animatorSet.start();
+    }
+
+    public void appendResult(String result) {
+        if (mDayRecord == null){
+            return;
+        }
+        mDayRecord.appendResult(result);
+        mDayRecordManager.updateDayRecordDatabase(mDayRecord);
+
     }
 
     public void onButtonClick(View view) {
@@ -484,6 +494,7 @@ public class ExpensesManager extends Activity implements EvaluateCallback,
         @Override
         public Loader<DayRecord> onCreateLoader(int id, Bundle args) {
             return new DayRecordLoader(getApplicationContext(), args.getLong(KEY_DAY_RECORD_ID));
+
         }
 
         @Override

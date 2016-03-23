@@ -25,8 +25,13 @@
 
         <activity android:name=".calendar.AllInOneActivity"
                   android:label="@string/title_activity_expenses_manager_calendar">
-
         </activity>
+
+
+        <provider android:name=".DayRecordsProvider"
+                  android:exported="false"
+                  android:authorities="ua.kiev.bpo.expensesmanager.DayRecordsProvider" />
+
     </application>
 
 </manifest>

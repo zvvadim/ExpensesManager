@@ -1,7 +1,11 @@
 package ua.kiev.bpo.expensesmanager;
 
 import android.content.Context;
+import android.content.CursorLoader;
+import android.content.Loader;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.net.Uri;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -24,6 +28,7 @@ public class DayRecordManager {
         mPreferences = mAppContext.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE);
         mHelper = new ExpensesManagerDatabaseHelper(appContext);
         mCurrentDayRecordId = mPreferences.getLong(PREF_CURRENT_DAY_ID, -1);
+
     }
 
     public static DayRecordManager get(Context c) {
@@ -50,6 +55,7 @@ public class DayRecordManager {
                 dayRecord = new DayRecord();
                 dayRecord.setDateOfRecord(new Date(calendar.getTimeInMillis()));
                 dayRecord.setId(mHelper.insertDayRecord(dayRecord));
+                dayRecord.setStartDate((int) calendar.getTimeInMillis());
             } else {
                 dayRecord = cursor.getDayRecord();
             }
@@ -63,4 +69,15 @@ public class DayRecordManager {
 
         return dayRecord;
     }
+
+    public void updateDayRecordDatabase(DayRecord dayRecord){
+        mHelper.updateDayRecord(dayRecord);
+    }
+
+    public Loader<Cursor> queryDayRecors(Uri uri){
+        return new CursorLoader(mAppContext,uri, DayRecord
+                .DAYRECORD_PROJECTION, null,
+                null, null);
+    }
+
 }

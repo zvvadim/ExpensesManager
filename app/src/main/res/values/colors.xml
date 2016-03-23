@@ -68,6 +68,7 @@
 
     <color name="month_dna_conflict_time_color">#FF333333</color>
     <color name="calendar_date_banner_background">#FFEEEEEE</color>
+    <color name="calendar_grid_line_inner_vertical_color">#FFCCCCCC</color>
 
 
 </resources>

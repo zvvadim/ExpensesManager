@@ -13,10 +13,10 @@ public class ExpensesManagerDatabaseHelper extends SQLiteOpenHelper {
     private static final String DB_NAME = "em.sqlite";
     private static final int VERSION = 1;
 
-    private static final String TABLE_EXPENSES = "expenses";
-    private static final String COLUMN_EXPENSES_ID = "_id";
-    private static final String COLUMN_EXPENSES_DATE = "exp_date";
-    private static final String COLUMN_EXPENSES_AMOUNT = "exp_amount";
+    public static final String TABLE_EXPENSES = "expenses";
+    public static final String COLUMN_EXPENSES_ID = "_id";
+    public static final String COLUMN_EXPENSES_DATE = "exp_date";
+    public static final String COLUMN_EXPENSES_AMOUNT = "exp_amount";
 
     public ExpensesManagerDatabaseHelper(Context context) {
         super(context, DB_NAME, null, VERSION);
@@ -79,6 +79,7 @@ public class ExpensesManagerDatabaseHelper extends SQLiteOpenHelper {
 
             long dayRecordDate = getLong(getColumnIndex(COLUMN_EXPENSES_DATE));
             dayRecord.setDateOfRecord(new Date(dayRecordDate));
+            dayRecord.setStartDate((int) dayRecordDate);
 
             int dayRecordAmount = getInt(getColumnIndex(COLUMN_EXPENSES_AMOUNT));
             dayRecord.setAmount(dayRecordAmount);
@@ -87,5 +88,12 @@ public class ExpensesManagerDatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
+    public void updateDayRecord(DayRecord dayRecord){
+        ContentValues cv = new ContentValues();
+        cv.put(COLUMN_EXPENSES_ID, dayRecord.getId());
+        cv.put(COLUMN_EXPENSES_DATE, dayRecord.getDateOfRecord().getTime());
+        cv.put(COLUMN_EXPENSES_AMOUNT, dayRecord.getAmount());
 
+        getWritableDatabase().insertWithOnConflict(TABLE_EXPENSES, null, cv, SQLiteDatabase.CONFLICT_REPLACE);
+    }
 }

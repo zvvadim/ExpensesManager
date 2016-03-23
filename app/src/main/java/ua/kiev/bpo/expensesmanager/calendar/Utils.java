@@ -160,4 +160,26 @@ public class Utils {
         return formatDateRange(context, millis, millis, flags);
     }
 
+    public static String getSearchAuthority(Context context) {
+        return context.getPackageName() + ".CalendarRecentSuggestionsProvider";
+    }
+
+    public static class DNAStrand {
+        public float[] points;
+        public int[] allDays; // color for the allday, 0 means no event
+        int position;
+        public int color;
+        int count;
+    }
+
+    // A segment is a single continuous length of time occupied by a single
+    // color. Segments should never span multiple days.
+    private static class DNASegment {
+        int startMinute; // in minutes since the start of the week
+        int endMinute;
+        int color; // Calendar color or black for conflicts
+        int day; // quick reference to the day this segment is on
+    }
+
+    
 }
